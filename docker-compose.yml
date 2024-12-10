@@ -1,0 +1,33 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: social      # Nombre de la base de datos
+      POSTGRES_USER: admin         # Usuario de la base de datos
+      POSTGRES_PASSWORD: adminpassword  # Contraseña del usuario
+    ports:
+      - "5432:5432"                # Puerto expuesto para PostgreSQL
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - postgres_network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: wlady@hotmail.com   # Usuario de pgAdmin
+      PGADMIN_DEFAULT_PASSWORD: password        # Contraseña de pgAdmin
+    ports:
+      - "5050:80"                  # Puerto para acceder a pgAdmin
+    networks:
+      - postgres_network
+
+volumes:
+  postgres_data:                   # Persistencia de datos para PostgreSQL
+
+networks:
+  postgres_network:                # Red compartida entre servicios

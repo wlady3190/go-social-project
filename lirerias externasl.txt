@@ -1,0 +1,27 @@
+para hpt reloading
+AIR
+ cambiar en la config tmp_dir = "bin"
+  args_bin = []
+  bin = "./bin/main"
+  cmd = "go build -o ./bin/main ./cmd/api"
+  delay = 1000
+  exclude_dir = ["assets", "bin", "vendor", "testdata", "web", "docs", "scripts"] web por que ahi va el frontend, docs y scripts
+
+instalar direnv
+ejecutar direnv allow .
+
+instalar golang migrate para migraciones
+
+go get -u -d github.com/golang-migrate/migrate/cmd/migrate
+Crear archivos de migraciones
+migrate create -seq -ext sql -dir ./cmd/migrate/migrations/ create_users
+Migrar las tablas
+migrate -path= ./cmd/migrate/migrations -database="postgres://admin:adminpassword@localhost/social?sslmode=disable" up
+forzar  auna determinada migración
+migrate -path=./cmd/migrate/migrations -database="postgres://admin:adminpassword@localhost/social?sslmode=disable" force 1
+
+Con el Makefile
+make migrate-create name=alter_post_table
+
+Validator
+go get 	"github.com/go-playground/validator/v10"
