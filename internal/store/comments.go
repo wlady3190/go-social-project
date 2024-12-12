@@ -60,8 +60,6 @@ func (s *CommentStore) Create(ctx context.Context, comment *Comment) error {
 	`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
-	// ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
-	// defer cancel()
 
 	err := s.db.QueryRowContext(
 		ctx,

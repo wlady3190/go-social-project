@@ -19,4 +19,7 @@ migrate-down:
 migrate-force:
 	@if [ -z "$(version)" ]; then echo "Uso: make migrate-force version=<version>"; exit 1; fi
 	@migrate -path=$(MIGRATION_PATH) -database=$(DB_ADDR) force $(version)
-  
+
+.PHONY: seed
+seed:
+	@go run cmd/migrate/seed/main.go
