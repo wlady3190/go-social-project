@@ -171,7 +171,7 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 			app.notFoundResponse(w, r, err)
 		default:
 			//409 por conflicto
-			app.internalConflictResponse(w, r, err)
+			app.conflictResponse(w, r, err)
 		}
 		return
 
