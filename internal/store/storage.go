@@ -10,7 +10,7 @@ import (
 var (
 	ErrNotFound          = errors.New("record not found")
 	QueryTimeoutDuration = time.Second * 5
-	ErrConflict = errors.New("resource already exists")
+	ErrConflict          = errors.New("resource already exists")
 )
 
 type Storage struct {
@@ -19,6 +19,7 @@ type Storage struct {
 		Create(context.Context, *Post) error
 		Delete(context.Context, int64) error
 		Update(context.Context, *Post) error
+		GetUserFeed(context.Context, int64, PaginatedFeedQuery) ([]PostWithMetadata, error)
 	}
 	Users interface {
 		GetById(context.Context, int64) (*User, error)
@@ -40,5 +41,6 @@ func NewPostgresStorage(db *sql.DB) Storage {
 		Users:     &UserStore{db},
 		Comments:  &CommentStore{db},
 		Followers: &FollowerStore{db},
+		
 	}
 } //! Y ESTO VA AL MAIN
