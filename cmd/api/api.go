@@ -1,12 +1,16 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
+	"github.com/wlady3190/go-social/docs" //! Para generar documentación de swagger
+
 	"github.com/wlady3190/go-social/internal/store"
 )
 
@@ -17,11 +21,11 @@ type application struct {
 }
 
 type config struct {
-	addr string
-	db   dbConfig
-
-	env string //desarrollo, producción, etc.
-
+	addr   string
+	db     dbConfig
+	env    string //desarrollo, producción, etc.
+	//* Viene del swagger
+	apiURL string
 }
 
 type dbConfig struct {
@@ -53,6 +57,10 @@ func (app *application) mount() http.Handler {
 	// r.Get("/v1/health", app.healthCheckHandler)
 	r.Route("/v1", func(r chi.Router) {
 		r.Get("/health", app.healthCheckHandler)
+		//! Swagger implementación
+		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
+
+		r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
 
 		r.Route("/posts", func(r chi.Router) {
 			r.Post("/", app.createPostHandler)
@@ -93,6 +101,10 @@ func (app *application) mount() http.Handler {
 // func (app *application) run(mux *http.ServeMux) error {
 // func (app *application) run(mux *chi.Mux) error {
 func (app *application) run(mux http.Handler) error {
+	//! Swagger implementación
+	docs.SwaggerInfo.Version = version
+	docs.SwaggerInfo.Host = app.config.apiURL
+	docs.SwaggerInfo.BasePath = "/v1"
 
 	// mux := http.NewServeMux()
 	srv := &http.Server{

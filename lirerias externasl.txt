@@ -25,3 +25,20 @@ make migrate-create name=alter_post_table
 
 Validator
 go get 	"github.com/go-playground/validator/v10"
+
+SWAGGER
+go install github.com/swaggo/swag/cmd/swag@latest
+swag init
+go get -u github.com/swaggo/http-swagger
+y eso va en los imports de api.go
+
+-> construir el comando en el makefile para ejecutar swagger
+
+tener la carpeta de docs y el archivo de docs.go para que se generen los archivosy usar en el main y en api.go
+
+para acceder: http://localhost:8080/v1/swagger/index.html
+
+
+Para que se actualicen los docs, en air.toml -> actualizar    pre_cmd = ["make gen-docs"]
+
+LOGGING ESTRUCTURADO
