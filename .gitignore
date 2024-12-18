@@ -23,5 +23,6 @@ bin
 /bin/
 # Go workspace file
 go.work
+/bin/build-errors.log
 
 # End of https://www.toptal.com/developers/gitignore/api/go

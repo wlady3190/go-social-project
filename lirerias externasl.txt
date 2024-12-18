@@ -42,3 +42,5 @@ para acceder: http://localhost:8080/v1/swagger/index.html
 Para que se actualicen los docs, en air.toml -> actualizar    pre_cmd = ["make gen-docs"]
 
 LOGGING ESTRUCTURADO
+go get -u go.uber.org/zap
+

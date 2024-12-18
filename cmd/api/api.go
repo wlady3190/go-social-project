@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"github.com/wlady3190/go-social/docs" //! Para generar documentación de swagger
+	"go.uber.org/zap"
 
 	"github.com/wlady3190/go-social/internal/store"
 )
@@ -17,7 +17,8 @@ import (
 type application struct {
 	config config
 	store  store.Storage //! se pasa a main
-
+	//* Logging estructurado con zap
+	logger *zap.SugaredLogger //! Para el main
 }
 
 type config struct {
@@ -114,7 +115,7 @@ func (app *application) run(mux http.Handler) error {
 		ReadTimeout:  time.Second * 10,
 		IdleTimeout:  time.Minute,
 	}
-	log.Printf("server is in  %s", app.config.addr)
+	app.logger.Infow("server has started ", "addr", app.config.addr, "env", app.config.env)
 	return srv.ListenAndServe()
 
 }
