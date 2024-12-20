@@ -19,6 +19,7 @@ type application struct {
 	store  store.Storage //! se pasa a main
 	//* Logging estructurado con zap
 	logger *zap.SugaredLogger //! Para el main
+
 }
 
 type config struct {
@@ -27,7 +28,15 @@ type config struct {
 	env    string //desarrollo, producción, etc.
 	//* Viene del swagger
 	apiURL string
+	//* expiration 
+	mail mailConfig
+
 }
+
+type mailConfig struct {
+	exp time.Duration
+}
+
 
 type dbConfig struct {
 	addr              string
@@ -91,6 +100,10 @@ func (app *application) mount() http.Handler {
 			)
 			r.Group(func(r chi.Router) {
 				r.Get("/feed", app.getUserFeedHandler)
+			})
+			//! Rutas públicas
+			r.Route("/authentication", func(r chi.Router) {
+				r.Post("/user", app.registerUserHandler)
 			})
 		})
 

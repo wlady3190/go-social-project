@@ -1,6 +1,7 @@
 package main
 
 import (
+	"time"
 
 	"github.com/wlady3190/go-social/internal/db"
 	"github.com/wlady3190/go-social/internal/env"
@@ -44,6 +45,10 @@ func main() {
 			maxIdleTime:       env.GetString("DB_MAX_IDLE_TIME", "15m"),
 		}, //! A internal para crear db
 		env: env.GetString("ENV", "development"),
+		 //* Para la expiración del token de UserInvite
+		 mail: mailConfig{
+			exp: time.Hour*24*3, //3 dias
+		 },
 	}
 
 	//* Logger

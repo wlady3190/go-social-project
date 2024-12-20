@@ -11,6 +11,9 @@ var (
 	ErrNotFound          = errors.New("record not found")
 	QueryTimeoutDuration = time.Second * 5
 	ErrConflict          = errors.New("resource already exists")
+	ErrDuplicateEmail = errors.New("email already exists")
+	ErrDuplicateUsername = errors.New("username already exists")
+
 )
 
 type Storage struct {
@@ -23,7 +26,8 @@ type Storage struct {
 	}
 	Users interface {
 		GetById(context.Context, int64) (*User, error)
-		Create(context.Context, *User) error
+		Create(context.Context, *sql.Tx, *User) error
+		CreateAndInvite(ctx context.Context, user *User, token string, invitationExp time.Duration) error
 	}
 	Comments interface {
 		GetByPostID(context.Context, int64) ([]Comment, error)
@@ -41,6 +45,19 @@ func NewPostgresStorage(db *sql.DB) Storage {
 		Users:     &UserStore{db},
 		Comments:  &CommentStore{db},
 		Followers: &FollowerStore{db},
-		
 	}
 } //! Y ESTO VA AL MAIN
+
+//* Transacciones
+
+func withTX(db *sql.DB, ctx context.Context, fn func(*sql.Tx) error) error {
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	if err:= fn(tx); err != nil{
+		_ = tx.Rollback()
+		return err
+	}
+	return tx.Commit()
+}
