@@ -23,20 +23,18 @@ type application struct {
 }
 
 type config struct {
-	addr   string
-	db     dbConfig
-	env    string //desarrollo, producción, etc.
+	addr string
+	db   dbConfig
+	env  string //desarrollo, producción, etc.
 	//* Viene del swagger
 	apiURL string
-	//* expiration 
+	//* expiration
 	mail mailConfig
-
 }
 
 type mailConfig struct {
 	exp time.Duration
 }
-
 
 type dbConfig struct {
 	addr              string
@@ -90,6 +88,8 @@ func (app *application) mount() http.Handler {
 		})
 
 		r.Route("/users", func(r chi.Router) {
+
+			r.Put("/activate/{token}", app.activateUserHandler)
 			r.Route("/{userID}", func(r chi.Router) {
 				r.Use(app.userContextMiddleware)
 				r.Get("/", app.getUserHandler)
@@ -101,10 +101,11 @@ func (app *application) mount() http.Handler {
 			r.Group(func(r chi.Router) {
 				r.Get("/feed", app.getUserFeedHandler)
 			})
-			//! Rutas públicas
-			r.Route("/authentication", func(r chi.Router) {
-				r.Post("/user", app.registerUserHandler)
-			})
+
+		})
+		//! Rutas públicas
+		r.Route("/authentication", func(r chi.Router) {
+			r.Post("/user", app.registerUserHandler)
 		})
 
 	})
