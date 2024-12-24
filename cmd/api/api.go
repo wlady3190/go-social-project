@@ -11,6 +11,7 @@ import (
 	"github.com/wlady3190/go-social/docs" //! Para generar documentación de swagger
 	"go.uber.org/zap"
 
+	"github.com/wlady3190/go-social/internal/mailer"
 	"github.com/wlady3190/go-social/internal/store"
 )
 
@@ -19,6 +20,10 @@ type application struct {
 	store  store.Storage //! se pasa a main
 	//* Logging estructurado con zap
 	logger *zap.SugaredLogger //! Para el main
+
+	//* Viene del mailer
+	mailer mailer.Client
+
 
 }
 
@@ -30,11 +35,21 @@ type config struct {
 	apiURL string
 	//* expiration
 	mail mailConfig
-}
+	frontendURL string
 
+
+
+}
+//* Viene del main
 type mailConfig struct {
+	sendgrid sendGridConfig
+	fromEmail string
 	exp time.Duration
 }
+
+type sendGridConfig struct {
+	apikey string
+} //va al main, en mail
 
 type dbConfig struct {
 	addr              string

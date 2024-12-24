@@ -5,6 +5,7 @@ import (
 
 	"github.com/wlady3190/go-social/internal/db"
 	"github.com/wlady3190/go-social/internal/env"
+	"github.com/wlady3190/go-social/internal/mailer"
 	"github.com/wlady3190/go-social/internal/store"
 	"go.uber.org/zap"
 )
@@ -38,6 +39,8 @@ func main() {
 		addr: env.GetString("ADDR", ":8080"),
 		//* Para el swagger
 		apiURL: env.GetString("EXTERNAL_URL", "localhost:8080"),
+		//! Para la confirmación 
+		frontendURL: env.GetString("FRONTEND_URL", "http://localhost:4000"),
 		db: dbConfig{
 			addr:              env.GetString("DB_ADDR", "postgres://admin:adminpassword@localhost/social?sslmode=disable"),
 			maxOpenConns:      env.GetInt("DB_MAX_OPEN_CONNS", 30),
@@ -45,10 +48,14 @@ func main() {
 			maxIdleTime:       env.GetString("DB_MAX_IDLE_TIME", "15m"),
 		}, //! A internal para crear db
 		env: env.GetString("ENV", "development"),
-		 //* Para la expiración del token de UserInvite
-		 mail: mailConfig{
-			exp: time.Hour*24*3, //3 dias
-		 },
+		//* Para la expiración del token de UserInvite
+		mail: mailConfig{
+			exp:       time.Hour * 24 * 3, //3 dias
+			fromEmail: env.GetString("SENDGRID_FROM_EMAIL", ""),
+			sendgrid: sendGridConfig{
+				apikey: env.GetString("SENDGRID_API_KEY", ""),
+			},
+		},
 	}
 
 	//* Logger
@@ -69,10 +76,14 @@ func main() {
 
 	store := store.NewPostgresStorage(db) //! Y se pasa a la API
 
+	//* Viene de mailer
+	mailer := mailer.NewSendgrid(cfg.mail.sendgrid.apikey, cfg.mail.fromEmail)
+
 	app := &application{
 		config: cfg,
 		store:  store,
 		logger: logger,
+		mailer: mailer, //* De aqui a auth -> RegisterUserHandler
 	}
 
 	mux := app.mount()
