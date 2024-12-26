@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"github.com/wlady3190/go-social/docs" //! Para generar documentación de swagger
 	"go.uber.org/zap"
@@ -23,8 +24,6 @@ type application struct {
 
 	//* Viene del mailer
 	mailer mailer.Client
-
-
 }
 
 type config struct {
@@ -34,22 +33,26 @@ type config struct {
 	//* Viene del swagger
 	apiURL string
 	//* expiration
-	mail mailConfig
+	mail        mailConfig
 	frontendURL string
-
-
-
 }
-//* Viene del main
+
+// * Viene del main
 type mailConfig struct {
 	sendgrid sendGridConfig
+	mailTrap mailTrapConfig
+
 	fromEmail string
-	exp time.Duration
+	exp       time.Duration
 }
 
 type sendGridConfig struct {
 	apikey string
 } //va al main, en mail
+
+type mailTrapConfig struct {
+	apikey string
+}
 
 type dbConfig struct {
 	addr              string
@@ -66,6 +69,22 @@ func (app *application) mount() http.Handler {
 
 	// mux.HandleFunc("GET /v1/health", app.healthCheckHandler )
 	r := chi.NewRouter()
+
+	//*cors
+
+	// Basic CORS
+	// for more ideas, see: https://developer.github.com/v3/#cross-origin-resource-sharing
+	r.Use(cors.Handler(cors.Options{
+		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
+		AllowedOrigins: []string{"https://*", "http://*"},
+		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	}))
+
 	// A good base middleware stack
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP) //! Ver documentcion sobre el uso con nginx

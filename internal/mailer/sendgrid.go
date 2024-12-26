@@ -3,9 +3,7 @@ package mailer
 import (
 	"bytes"
 	"fmt"
-	"html/template"
-
-	"log"
+	"text/template"
 	"time"
 
 	"github.com/sendgrid/sendgrid-go"
@@ -14,67 +12,63 @@ import (
 
 type SendGridMailer struct {
 	fromEmail string
-	apikey    string
+	apiKey    string
 	client    *sendgrid.Client
 }
 
-func NewSendgrid(apikey, fromEmail string) *SendGridMailer {
-	client := sendgrid.NewSendClient(apikey)
+func NewSendgrid(apiKey, fromEmail string) *SendGridMailer {
+	client := sendgrid.NewSendClient(apiKey)
 
 	return &SendGridMailer{
 		fromEmail: fromEmail,
-		apikey:    apikey,
+		apiKey:    apiKey,
 		client:    client,
 	}
 }
 
-func (m *SendGridMailer) Send(templateFile, username, email string, data any, isSandBox bool) error {
+func (m *SendGridMailer) Send(templateFile, username, email string, data any, isSandbox bool) (int, error) {
 	from := mail.NewEmail(FromName, m.fromEmail)
 	to := mail.NewEmail(username, email)
 
-	//* template parsing and building
-
-	tmpl, err := template.ParseFS(FS, "templates/"+UserWelcomeTemplate)
-
+	// template parsing and building
+	tmpl, err := template.ParseFS(FS, "templates/"+templateFile)
 	if err != nil {
-		return err
+		return -1, err
 	}
 
 	subject := new(bytes.Buffer)
 	err = tmpl.ExecuteTemplate(subject, "subject", data)
-
 	if err != nil {
-		return err
+		return -1, err
 	}
+
 	body := new(bytes.Buffer)
-
 	err = tmpl.ExecuteTemplate(body, "body", data)
-
 	if err != nil {
-		return err
+		return -1, err
 	}
 
 	message := mail.NewSingleEmail(from, subject.String(), to, "", body.String())
+
 	message.SetMailSettings(&mail.MailSettings{
 		SandboxMode: &mail.Setting{
-			Enable: &isSandBox,
+			Enable: &isSandbox,
 		},
 	})
 
+	//! No colocar Logs en las implementaciones de als funciones, sino en la función Padre, en este caso -> api.go
+	var retryErr error
 	for i := 0; i < maxRetires; i++ {
-		response, err := m.client.Send(message)
-		if err != nil {
-			log.Printf("failed to send email to %v, attempt %d of %d", email, i+1, maxRetires)
-			log.Printf("Error: %v", err.Error())
-			//exponential backoff
-			time.Sleep(time.Second * time.Duration(i+1))
-			continue //para que salte a la siguiente iteracion si hay error
+		response, retryErr := m.client.Send(message)
+		if retryErr != nil {
 
+			// exponential backoff
+			time.Sleep(time.Second * time.Duration(i+1))
+			continue
 		}
 
-		log.Printf("email sent to %s with status code %v", email, response.StatusCode)
-		return nil
+		return response.StatusCode, nil
 	}
-	return fmt.Errorf("failed after %d attempts", maxRetires)
 
+	return -1, fmt.Errorf("failed to send email after %d attempt, error: %v", maxRetires, retryErr)
 } //* Y esto va al main -> main()

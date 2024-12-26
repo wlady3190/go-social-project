@@ -39,8 +39,8 @@ func main() {
 		addr: env.GetString("ADDR", ":8080"),
 		//* Para el swagger
 		apiURL: env.GetString("EXTERNAL_URL", "localhost:8080"),
-		//! Para la confirmación 
-		frontendURL: env.GetString("FRONTEND_URL", "http://localhost:4000"),
+		//! Para la confirmación
+		frontendURL: env.GetString("FRONTEND_URL", "http://localhost:5173"),
 		db: dbConfig{
 			addr:              env.GetString("DB_ADDR", "postgres://admin:adminpassword@localhost/social?sslmode=disable"),
 			maxOpenConns:      env.GetInt("DB_MAX_OPEN_CONNS", 30),
@@ -55,6 +55,10 @@ func main() {
 			sendgrid: sendGridConfig{
 				apikey: env.GetString("SENDGRID_API_KEY", ""),
 			},
+			//! Para configurar Mailtrap y más abajo tn se complementar
+			// mailTrap: mailTrapConfig{
+			// 	apikey: env.GetString("MAILTRAP_API_KEY", ""),
+			// },
 		},
 	}
 
@@ -76,14 +80,22 @@ func main() {
 
 	store := store.NewPostgresStorage(db) //! Y se pasa a la API
 
-	//* Viene de mailer
-	mailer := mailer.NewSendgrid(cfg.mail.sendgrid.apikey, cfg.mail.fromEmail)
+	//* Viene de mailer SendGrid
+	// mailer := mailer.NewSendgrid(cfg.mail.sendgrid.apikey, cfg.mail.fromEmail)
+
+	//! MailTrap config
+	mailTrap, err := mailer.NewMailTrapClient(cfg.mail.mailTrap.apikey, cfg.mail.fromEmail)
+
+	if err != nil {
+		logger.Fatal(err)
+	}
 
 	app := &application{
 		config: cfg,
 		store:  store,
 		logger: logger,
-		mailer: mailer, //* De aqui a auth -> RegisterUserHandler
+		//mailer: mailer, //* De aqui a auth -> RegisterUserHandler
+		mailer: mailTrap,
 	}
 
 	mux := app.mount()

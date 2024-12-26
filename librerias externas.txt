@@ -44,3 +44,6 @@ Para que se actualicen los docs, en air.toml -> actualizar    pre_cmd = ["make g
 LOGGING ESTRUCTURADO
 go get -u go.uber.org/zap
 
+CORS 
+go get github.com/go-chi/cors
+
