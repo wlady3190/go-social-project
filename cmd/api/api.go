@@ -12,7 +12,7 @@ import (
 	"github.com/wlady3190/go-social/docs" //! Para generar documentación de swagger
 	"go.uber.org/zap"
 
-	"github.com/wlady3190/go-social/internal/mailer"
+	// "github.com/wlady3190/go-social/internal/mailer"
 	"github.com/wlady3190/go-social/internal/store"
 )
 
@@ -23,7 +23,7 @@ type application struct {
 	logger *zap.SugaredLogger //! Para el main
 
 	//* Viene del mailer
-	mailer mailer.Client
+	// mailer mailer.Client
 }
 
 type config struct {
@@ -33,26 +33,40 @@ type config struct {
 	//* Viene del swagger
 	apiURL string
 	//* expiration
-	mail        mailConfig
+	//  mail        mailConfig
 	frontendURL string
+	auth authConfig
 }
+
+
+//! Basic config
+
+type authConfig struct {
+	basic basicConfig
+}
+
+type basicConfig struct {
+	user string
+	pass string
+}
+
 
 // * Viene del main
-type mailConfig struct {
-	sendgrid sendGridConfig
-	mailTrap mailTrapConfig
+// type mailConfig struct {
+// 	sendgrid sendGridConfig
+// 	mailTrap mailTrapConfig
 
-	fromEmail string
-	exp       time.Duration
-}
+// 	fromEmail string
+// 	exp       time.Duration
+// }
 
-type sendGridConfig struct {
-	apikey string
-} //va al main, en mail
+// type sendGridConfig struct {
+// 	apikey string
+// } //va al main, en mail
 
-type mailTrapConfig struct {
-	apikey string
-}
+// type mailTrapConfig struct {
+// 	apikey string
+// }
 
 type dbConfig struct {
 	addr              string
@@ -98,7 +112,8 @@ func (app *application) mount() http.Handler {
 
 	// r.Get("/v1/health", app.healthCheckHandler)
 	r.Route("/v1", func(r chi.Router) {
-		r.Get("/health", app.healthCheckHandler)
+		//! Viene del middleware de BasicAUth creado y va al main
+		r.With(app.BasicAuthMiddleware()).Get("/health", app.healthCheckHandler)
 		//! Swagger implementación
 		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
 
@@ -140,6 +155,7 @@ func (app *application) mount() http.Handler {
 		//! Rutas públicas
 		r.Route("/authentication", func(r chi.Router) {
 			r.Post("/user", app.registerUserHandler)
+			r.Post("/token", app.createTokenHandler)
 		})
 
 	})

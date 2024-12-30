@@ -1,11 +1,11 @@
 package main
 
 import (
-	"time"
+	// "time"
 
 	"github.com/wlady3190/go-social/internal/db"
 	"github.com/wlady3190/go-social/internal/env"
-	"github.com/wlady3190/go-social/internal/mailer"
+	// "github.com/wlady3190/go-social/internal/mailer"
 	"github.com/wlady3190/go-social/internal/store"
 	"go.uber.org/zap"
 )
@@ -49,16 +49,22 @@ func main() {
 		}, //! A internal para crear db
 		env: env.GetString("ENV", "development"),
 		//* Para la expiración del token de UserInvite
-		mail: mailConfig{
-			exp:       time.Hour * 24 * 3, //3 dias
-			fromEmail: env.GetString("SENDGRID_FROM_EMAIL", ""),
-			sendgrid: sendGridConfig{
-				apikey: env.GetString("SENDGRID_API_KEY", ""),
+		// mail: mailConfig{
+		// 	exp:       time.Hour * 24 * 3, //3 dias
+		// 	fromEmail: env.GetString("SENDGRID_FROM_EMAIL", ""),
+		// 	sendgrid: sendGridConfig{
+		// 		apikey: env.GetString("SENDGRID_API_KEY", ""),
+		// 	},
+		// 	//! Para configurar Mailtrap y más abajo tn se complementar
+		// 	// mailTrap: mailTrapConfig{
+		// 	// 	apikey: env.GetString("MAILTRAP_API_KEY", ""),
+		// 	// },
+		// },
+		auth: authConfig{
+			basic: basicConfig{
+				user: env.GetString("AUTH_BASIC_USER", "admin"),
+				pass: env.GetString("AUTH_BASIC_PASS", "password"),
 			},
-			//! Para configurar Mailtrap y más abajo tn se complementar
-			// mailTrap: mailTrapConfig{
-			// 	apikey: env.GetString("MAILTRAP_API_KEY", ""),
-			// },
 		},
 	}
 
@@ -84,18 +90,18 @@ func main() {
 	// mailer := mailer.NewSendgrid(cfg.mail.sendgrid.apikey, cfg.mail.fromEmail)
 
 	//! MailTrap config
-	mailTrap, err := mailer.NewMailTrapClient(cfg.mail.mailTrap.apikey, cfg.mail.fromEmail)
+	// mailTrap, err := mailer.NewMailTrapClient(cfg.mail.mailTrap.apikey, cfg.mail.fromEmail)
 
-	if err != nil {
-		logger.Fatal(err)
-	}
+	// if err != nil {
+	// 	logger.Fatal(err)
+	// }
 
 	app := &application{
 		config: cfg,
 		store:  store,
 		logger: logger,
 		//mailer: mailer, //* De aqui a auth -> RegisterUserHandler
-		mailer: mailTrap,
+		// mailer: mailTrap,
 	}
 
 	mux := app.mount()

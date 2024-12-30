@@ -3,11 +3,13 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
+	"time"
+
+	// "fmt"
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/wlady3190/go-social/internal/mailer"
+	// "github.com/wlady3190/go-social/internal/mailer"
 	"github.com/wlady3190/go-social/internal/store"
 )
 
@@ -68,7 +70,9 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 
 	hashToken := hex.EncodeToString(hash[:])
 
-	err := app.store.Users.CreateAndInvite(ctx, user, hashToken, app.config.mail.exp)
+	// err := app.store.Users.CreateAndInvite(ctx, user, hashToken, app.config.mail.exp)
+	err := app.store.Users.CreateAndInvite(ctx, user, hashToken, time.Hour*24)
+
 	//! Se crean migraciones de invitación
 	if err != nil {
 		switch err {
@@ -87,33 +91,51 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		Token: plainToken,
 	}
 
-	isProdEnv := app.config.env == "production"
+	// isProdEnv := app.config.env == "production"
 
-	activationURL := fmt.Sprintf("%s/confirm/%s",app.config.frontendURL, plainToken)
-	vars := struct {
-		Username      string
-		ActivationURL string
-	}{
-		Username: user.Username,
-		ActivationURL: activationURL,
-	}
+	// activationURL := fmt.Sprintf("%s/confirm/%s",app.config.frontendURL, plainToken)
+	// vars := struct {
+	// 	Username      string
+	// 	ActivationURL string
+	// }{
+	// 	Username: user.Username,
+	// 	ActivationURL: activationURL,
+	// }
 	//! Enviadno correos
-	status, err := app.mailer.Send(mailer.UserWelcomeTemplate, user.Username, user.Email, vars, !isProdEnv)
-	if err != nil {
-		app.logger.Errorw("error sending welcome email", "error", err)
-		//! *****************SAGA PATTTERN ******************************
-		//! rollback user creation if email fails SAGA
-		if err := app.store.Users.Delete(ctx,user.ID); err != nil {
-			app.logger.Errorw("error deleting user", "error", err)
-		}
+	// status, err := app.mailer.Send(mailer.UserWelcomeTemplate, user.Username, user.Email, vars, !isProdEnv)
+	// if err != nil {
+	// 	app.logger.Errorw("error sending welcome email", "error", err)
+	// 	//! *****************SAGA PATTTERN ******************************
+	// 	//! rollback user creation if email fails SAGA
+	// 	if err := app.store.Users.Delete(ctx,user.ID); err != nil {
+	// 		app.logger.Errorw("error deleting user", "error", err)
+	// 	}
 
-		app.internalServerError(w, r, err)
-		return
-	}
-	app.logger.Infow("Email sent", "status code: ", status)
+	// 	app.internalServerError(w, r, err)
+	// 	return
+	// }
+	// app.logger.Infow("Email sent", "status code: ", status)
 
 	if err := app.jsonResponse(w, http.StatusCreated, UserWithToken); err != nil {
 		app.internalServerError(w, r, err)
 	}
+
+}
+
+// createTokenHandler godoc
+//
+//	@Summary		Creates a token
+//	@Description	Creates a token for a user
+//	@Tags			authentication
+//	@Accept			json
+//	@Produce		json
+//	@Param			payload	body		CreateUserTokenPayload	true	"User credentials"
+//	@Success		200		{string}	string					"Token"
+//	@Failure		400		{object}	error
+//	@Failure		401		{object}	error
+//	@Failure		500		{object}	error
+//	@Router			/authentication/token [post]
+
+func (app *application) createTokenHandler(w http.ResponseWriter, r *http.Request) {
 
 }
