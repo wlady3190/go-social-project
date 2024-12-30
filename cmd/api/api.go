@@ -13,6 +13,7 @@ import (
 	"go.uber.org/zap"
 
 	// "github.com/wlady3190/go-social/internal/mailer"
+	"github.com/wlady3190/go-social/internal/auth"
 	"github.com/wlady3190/go-social/internal/store"
 )
 
@@ -24,6 +25,9 @@ type application struct {
 
 	//* Viene del mailer
 	// mailer mailer.Client
+
+	//* Auhenticator
+	authenticator auth.Authenticator
 }
 
 type config struct {
@@ -35,21 +39,26 @@ type config struct {
 	//* expiration
 	//  mail        mailConfig
 	frontendURL string
-	auth authConfig
+	auth        authConfig
 }
-
 
 //! Basic config
 
 type authConfig struct {
 	basic basicConfig
+	token tokenConfig
+}
+
+type tokenConfig struct {
+	secret string
+	exp    time.Duration
+	iss    string
 }
 
 type basicConfig struct {
 	user string
 	pass string
 }
-
 
 // * Viene del main
 // type mailConfig struct {

@@ -3,8 +3,12 @@ package main
 import (
 	// "time"
 
+	"time"
+
+	"github.com/wlady3190/go-social/internal/auth"
 	"github.com/wlady3190/go-social/internal/db"
 	"github.com/wlady3190/go-social/internal/env"
+
 	// "github.com/wlady3190/go-social/internal/mailer"
 	"github.com/wlady3190/go-social/internal/store"
 	"go.uber.org/zap"
@@ -63,9 +67,16 @@ func main() {
 		auth: authConfig{
 			basic: basicConfig{
 				user: env.GetString("AUTH_BASIC_USER", "admin"),
-				pass: env.GetString("AUTH_BASIC_PASS", "password"),
+				pass: env.GetString("AUTH_BASIC_PASS", "admin"),
+			},
+
+			token: tokenConfig{
+				secret: env.GetString("AUTH_TOKEN_SECRET", "example"),
+				exp:    time.Hour * 24 * 3,
+				iss:    "wladysocial",
 			},
 		},
+
 	}
 
 	//* Logger
@@ -96,12 +107,15 @@ func main() {
 	// 	logger.Fatal(err)
 	// }
 
+	jwtAuthenticator := auth.NewJWTAuthenticator(cfg.auth.token.secret, cfg.auth.token.iss, cfg.auth.token.iss)
+
 	app := &application{
 		config: cfg,
 		store:  store,
 		logger: logger,
 		//mailer: mailer, //* De aqui a auth -> RegisterUserHandler
 		// mailer: mailTrap,
+		authenticator: jwtAuthenticator,
 	}
 
 	mux := app.mount()

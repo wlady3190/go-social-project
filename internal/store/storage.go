@@ -11,9 +11,8 @@ var (
 	ErrNotFound          = errors.New("record not found")
 	QueryTimeoutDuration = time.Second * 5
 	ErrConflict          = errors.New("resource already exists")
-	ErrDuplicateEmail = errors.New("email already exists")
+	ErrDuplicateEmail    = errors.New("email already exists")
 	ErrDuplicateUsername = errors.New("username already exists")
-
 )
 
 type Storage struct {
@@ -26,10 +25,11 @@ type Storage struct {
 	}
 	Users interface {
 		GetById(context.Context, int64) (*User, error)
+		GetByEmail(context.Context, string) (*User, error)
 		Create(context.Context, *sql.Tx, *User) error
 		CreateAndInvite(ctx context.Context, user *User, token string, invitationExp time.Duration) error
-		Activate(context.Context, string )error
-		Delete(context.Context, int64)  error
+		Activate(context.Context, string) error
+		Delete(context.Context, int64) error
 	}
 	Comments interface {
 		GetByPostID(context.Context, int64) ([]Comment, error)
@@ -57,7 +57,7 @@ func withTX(db *sql.DB, ctx context.Context, fn func(*sql.Tx) error) error {
 	if err != nil {
 		return err
 	}
-	if err:= fn(tx); err != nil{
+	if err := fn(tx); err != nil {
 		_ = tx.Rollback()
 		return err
 	}

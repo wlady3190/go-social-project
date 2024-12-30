@@ -221,7 +221,6 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	if err := app.store.Posts.Update(ctx, post); err != nil {
-
 		switch {
 		case errors.Is(err, store.ErrNotFound):
 			app.notFoundResponse(w, r, err)
@@ -230,14 +229,12 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 			app.conflictResponse(w, r, err)
 		}
 		return
-
 	}
 
 	if err := app.jsonResponse(w, http.StatusOK, post); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
-
 }
 
 // ! Este middleware se consume en mount, en api
