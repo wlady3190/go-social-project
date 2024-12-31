@@ -10,6 +10,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+
 	// "github.com/wlady3190/go-social/internal/mailer"
 	"github.com/wlady3190/go-social/internal/store"
 )
@@ -157,6 +158,7 @@ func (app *application) createTokenHandler(w http.ResponseWriter, r *http.Reques
 	//fetch the user (check is ufser exists) from the payload
 
 	user, err := app.store.Users.GetByEmail(r.Context(), payload.Email)
+
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:
@@ -167,6 +169,13 @@ func (app *application) createTokenHandler(w http.ResponseWriter, r *http.Reques
 			app.internalServerError(w, r, err)
 
 		}
+		return
+	}
+
+	//! Comparando password
+
+	if err := user.Password.Compare(payload.Password); err != nil {
+		app.unathorizedErrorResponse(w, r, err)
 		return
 	}
 	// generate the token -> add claims

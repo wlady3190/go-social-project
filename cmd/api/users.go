@@ -27,7 +27,7 @@ const userCtx userKey = "user"
 //	@Security		ApiKeyAuth
 //	@Router			/users/activate/{token} [put]
 func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Request) {
-	
+
 	token := chi.URLParam(r, "token")
 	if err := app.store.Users.Activate(r.Context(), token); err != nil {
 		switch err {
@@ -88,9 +88,12 @@ func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type FollowUser struct {
-	UserID int64 `json:"user_id"`
-}
+//! *******Una vez hecho la autentificación con la generación y validación del token para que el contecto traiga al ID del user *****
+//! Ya no se usa una vez autenticado el usuario, solo para pruebas!!!
+// type FollowUser struct {
+// 	UserID int64 `json:"user_id"`
+// }
+//! SOlo para pruebas
 
 // FollowUser godoc
 //
@@ -107,19 +110,29 @@ type FollowUser struct {
 //	@Router			/users/{userID}/follow	[put]
 func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request) {
 
-	followerUser := getUserFromContext(r)
 	//TODO revert back to auht userID from ctx
+	//! Ya no se usa, solo es para pruebas
+	//! *******Una vez hecho la autentificación con la generación y validación del token para que el contecto traiga al ID del user *****
+	// var payload FollowUser
 
-	var payload FollowUser
+	// if err := readJSON(w, r, &payload); err != nil {
+	// 	app.badRequestReponse(w, r, err)
+	// 	return
+	// }
+	followerUser := getUserFromContext(r)
 
-	if err := readJSON(w, r, &payload); err != nil {
+	//! *******Una vez hecho la autentificación con la generación y validación del token para que el contecto traiga al ID del user *****
+	followedUserID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
+	if err != nil {
 		app.badRequestReponse(w, r, err)
 		return
 	}
 	ctx := r.Context()
 
 	//* payload esta auth
-	if err := app.store.Followers.Follow(ctx, followerUser.ID, payload.UserID); err != nil {
+	// if err := app.store.Followers.Follow(ctx, followerUser.ID, payload.UserID); err != nil {
+	if err := app.store.Followers.Follow(ctx, followerUser.ID, followedUserID); err != nil {
+
 		switch err {
 		case store.ErrConflict:
 			app.conflictResponse(w, r, err)
@@ -151,22 +164,32 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 //	@Router			/users/{userID}/unfollow	[put]
 func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Request) {
 
-	unfollowerUser := getUserFromContext(r)
-
 	// unfollowedID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
 	// if err != nil {
 	// 	app.badRequestReponse(w, r, err)
 	// 	return
 	// }
-	var payload FollowUser
 
-	if err := readJSON(w, r, &payload); err != nil {
+	// var payload FollowUser
+
+	followerUser := getUserFromContext(r)
+
+	//! *******Una vez hecho la autentificación con la generación y validación del token para que el contecto traiga al ID del user *****
+	unfollowedUserID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
+	if err != nil {
 		app.badRequestReponse(w, r, err)
 		return
 	}
 
+	// if err := readJSON(w, r, &payload); err != nil {
+	// 	app.badRequestReponse(w, r, err)
+	// 	return
+	// }
+
 	ctx := r.Context()
-	if err := app.store.Followers.Unfollow(ctx, unfollowerUser.ID, payload.UserID); err != nil {
+	// if err := app.store.Followers.Unfollow(ctx, unfollowerUser.ID, payload.UserID); err != nil {
+	if err := app.store.Followers.Unfollow(ctx, followerUser.ID, unfollowedUserID); err != nil {
+
 		app.internalServerError(w, r, err)
 		return
 	}

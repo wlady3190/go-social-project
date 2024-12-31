@@ -5,8 +5,9 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
-	"golang.org/x/crypto/bcrypt"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
@@ -32,7 +33,11 @@ func (p *Password) Set(text string) error {
 	p.hash = hash
 
 	return nil
+}
 
+
+func (p *Password) Compare(text string) error {
+	return bcrypt.CompareHashAndPassword(p.hash, []byte(text))
 }
 
 type UserStore struct {
@@ -87,7 +92,7 @@ func (s *UserStore) GetById(ctx context.Context, userID int64) (*User, error) {
 		&user.ID,
 		&user.Username,
 		&user.Email,
-		&user.Password,
+		&user.Password.hash,
 		&user.CreatedAt,
 	)
 	if err != nil {

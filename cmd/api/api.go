@@ -123,6 +123,8 @@ func (app *application) mount() http.Handler {
 	r.Route("/v1", func(r chi.Router) {
 		//! Viene del middleware de BasicAUth creado y va al main
 		r.With(app.BasicAuthMiddleware()).Get("/health", app.healthCheckHandler)
+		// r.Get("/health", app.healthCheckHandler)
+
 		//! Swagger implementación
 		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
 
@@ -132,6 +134,7 @@ func (app *application) mount() http.Handler {
 			r.Post("/", app.createPostHandler)
 
 			r.Route("/{postID}", func(r chi.Router) {
+				r.Use(app.AuthTokenMiddleware)
 				r.Use(app.postsContextMiddleware)
 				r.Get("/", app.getPostHandler)
 				r.Delete("/", app.deletePostHandler)
@@ -149,7 +152,10 @@ func (app *application) mount() http.Handler {
 
 			r.Put("/activate/{token}", app.activateUserHandler)
 			r.Route("/{userID}", func(r chi.Router) {
-				r.Use(app.userContextMiddleware)
+				//* Authentification
+				r.Use(app.AuthTokenMiddleware)
+				//! Ya viene el usr en el contexto de arriba
+				// r.Use(app.userContextMiddleware)
 				r.Get("/", app.getUserHandler)
 				r.Put("/follow", app.followUserHandler)
 				r.Put("/unfollow", app.unfollowUserHandler)
@@ -157,6 +163,7 @@ func (app *application) mount() http.Handler {
 			},
 			)
 			r.Group(func(r chi.Router) {
+				r.Use(app.AuthTokenMiddleware)
 				r.Get("/feed", app.getUserFeedHandler)
 			})
 

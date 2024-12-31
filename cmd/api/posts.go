@@ -51,12 +51,14 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		app.badRequestReponse(w, r, err)
 		return
 	}
+ //! *******Una vez hecho la autentificación con la generación y validación del token para que el contecto traiga al ID del user *****
+	user := getPostFromCtx(r)
 
 	post := &store.Post{
 		Title:   payload.Title,
 		Content: payload.Content,
 		Tags:    payload.Tags,
-		UserID:  1,
+		UserID:  user.ID, //! Es el user autenticado
 	}
 
 	// TODO Change after AUTH
@@ -167,7 +169,6 @@ func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request
 			app.internalServerError(w, r, err)
 		}
 		return
-
 	}
 	w.WriteHeader(http.StatusNoContent) //retornar un estado sin cotnen
 
@@ -251,6 +252,7 @@ func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
 		ctx := r.Context()
 
 		post, err := app.store.Posts.GetById(ctx, id)
+		
 		if err != nil {
 			switch {
 			case errors.Is(err, store.ErrNotFound):
@@ -259,7 +261,6 @@ func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
 			default:
 				// writeJSONError(w, http.StatusInternalServerError, err.Error())
 				app.internalServerError(w, r, err)
-
 			}
 			return
 		}
