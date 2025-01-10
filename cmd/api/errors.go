@@ -51,3 +51,11 @@ func (app *application) unathorizedBasicErrorResponse(w http.ResponseWriter, r *
 
 }
 
+func (app *application) forbiddenResponse(w http.ResponseWriter, r *http.Request) {
+	// log.Printf("conflict error: %s path: %s, error %s", r.Method, r.URL.Path, err)
+	app.logger.Warnw("forbidden ", "method", r.Method, "path", r.URL.Path, "error" )
+	writeJSONError(w, http.StatusForbidden, "forbidden")
+
+}
+
+

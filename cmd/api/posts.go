@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-
 	"net/http"
 	"strconv"
 
@@ -42,6 +41,7 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 
 	if error := readJSON(w, r, &payload); error != nil {
 		// writeJSONError(w, http.StatusBadRequest, error.Error())
+		app.logger.Debug(&payload)
 		app.badRequestReponse(w, r, error)
 		return
 	}
@@ -52,7 +52,7 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
  //! *******Una vez hecho la autentificación con la generación y validación del token para que el contecto traiga al ID del user *****
-	user := getPostFromCtx(r)
+	user := getUserFromContext(r)
 
 	post := &store.Post{
 		Title:   payload.Title,
@@ -196,6 +196,7 @@ type UpdatePostPayload struct {
 //	@Security		ApiKeyAuth
 //	@Router			/posts/{id} [patch]
 func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request) {
+	
 	post := getPostFromCtx(r)
 
 	ctx := r.Context()
