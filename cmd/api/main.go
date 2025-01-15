@@ -5,9 +5,11 @@ import (
 
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/wlady3190/go-social/internal/auth"
 	"github.com/wlady3190/go-social/internal/db"
 	"github.com/wlady3190/go-social/internal/env"
+	"github.com/wlady3190/go-social/internal/store/cache"
 
 	// "github.com/wlady3190/go-social/internal/mailer"
 	"github.com/wlady3190/go-social/internal/store"
@@ -51,6 +53,17 @@ func main() {
 			maxIdleConnetions: env.GetInt("DB_MAX_IDLE_CONNS", 30),
 			maxIdleTime:       env.GetString("DB_MAX_IDLE_TIME", "15m"),
 		}, //! A internal para crear db
+
+		//! Redis
+		redisCfg: redisConfig{
+			add: env.GetString("REDIS_ADDR", "localhost:6379"),
+			pw:  env.GetString("REDIS_PW", ""),
+			db:  env.GetInt("REDIS_DB", 0),
+			// enabled: false,
+			//! se extiende las variables de entorno en env.go par agregar GetBool()
+			enabled: env.GetBool("REDIS_ENABLED", false),
+		},
+
 		env: env.GetString("ENV", "development"),
 		//* Para la expiración del token de UserInvite
 		// mail: mailConfig{
@@ -76,7 +89,6 @@ func main() {
 				iss:    "wladysocial",
 			},
 		},
-
 	}
 
 	//* Logger
@@ -95,8 +107,16 @@ func main() {
 	defer db.Close()
 	logger.Info("db connected")
 
-	store := store.NewPostgresStorage(db) //! Y se pasa a la API
+	//! Redis -> Se añade un bool para activar redis en api.go
+	var rdb *redis.Client
+	if cfg.redisCfg.enabled {
+		rdb = cache.NewRedisClient(cfg.redisCfg.add, cfg.redisCfg.pw, cfg.redisCfg.db)
+		logger.Info("redis cache connection established")
 
+	}
+
+	store := store.NewPostgresStorage(db) //! Y se pasa a la API
+	cacheStorage := cache.NewRedisStorage(rdb)
 	//* Viene de mailer SendGrid
 	// mailer := mailer.NewSendgrid(cfg.mail.sendgrid.apikey, cfg.mail.fromEmail)
 
@@ -112,7 +132,9 @@ func main() {
 	app := &application{
 		config: cfg,
 		store:  store,
-		logger: logger,
+		//!redis, luego de implementar el stogare , las interfaces
+		cacheStorage: cacheStorage,
+		logger:       logger,
 		//mailer: mailer, //* De aqui a auth -> RegisterUserHandler
 		// mailer: mailTrap,
 		authenticator: jwtAuthenticator,

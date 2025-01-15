@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -57,12 +58,12 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 //	@Security		ApiKeyAuth
 //	@Router			/users/{id} [get]
 func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
-	// userID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
+	userID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
 
-	// if err != nil {
-	// 	app.badRequestReponse(w, r, err)
-	// 	return
-	// }
+	if err != nil {
+		app.badRequestReponse(w, r, err)
+		return
+	}
 
 	// ctx := r.Context()
 
@@ -77,8 +78,20 @@ func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 	// 		return
 	// 	}
 	// }
+	user, err := app.getUser(r.Context(), userID)
 
-	user := getUserFromContext(r)
+	if err != nil {
+		switch {
+		case errors.Is(err, store.ErrNotFound):
+			app.notFoundResponse(w, r, err)
+			return
+		default:
+			app.internalServerError(w, r, err)
+			return
+		}
+	}
+
+	// user := getUserFromContext(r)
 
 	if err := app.jsonResponse(w, http.StatusOK, user); err != nil {
 		app.internalServerError(w, r, err)

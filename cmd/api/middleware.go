@@ -41,8 +41,16 @@ func (app *application) AuthTokenMiddleware(next http.Handler) http.Handler {
 			return
 		}
 		ctx := r.Context()
-		user, err := app.store.Users.GetById(ctx, userID)
 
+		//! implementando cache con redis
+
+		// user, err := app.store.Users.GetById(ctx, userID)
+
+		// if err != nil {
+		// 	app.unathorizedErrorResponse(w, r, err)
+		// 	return
+		// }
+		user, err := app.getUser(ctx, userID)
 		if err != nil {
 			app.unathorizedErrorResponse(w, r, err)
 			return
@@ -53,6 +61,32 @@ func (app *application) AuthTokenMiddleware(next http.Handler) http.Handler {
 
 	})
 
+}
+
+func (app *application) getUser(ctx context.Context, userID int64) (*store.User, error) {
+	if !app.config.redisCfg.enabled {
+		return app.store.Users.GetById(ctx, userID)
+	}
+	//! verificacion si esta en caché
+	app.logger.Infow("cache hit", "key", "user", "id", userID)
+	user, err := app.cacheStorage.Users.Get(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	if user == nil {
+		user, err = app.store.Users.GetById(ctx, userID)
+		if err != nil {
+			// app.unathorizedErrorResponse(w, r, err)
+			// return
+			return nil, err
+		}
+		if err := app.cacheStorage.Users.Set(ctx, user); err != nil{
+			return nil, err
+		}
+
+	}
+	return user, nil
 }
 
 func (app *application) BasicAuthMiddleware() func(http.Handler) http.Handler {
@@ -110,11 +144,11 @@ func (app *application) checkPostOwnership(requiredRole string, next http.Handle
 		//* check role
 		allowed, err := app.CheckRolePrecedence(r.Context(), user, requiredRole)
 		if err != nil {
-			app.internalServerError(w,r,err)
+			app.internalServerError(w, r, err)
 			return
 		}
-		if (!allowed){
-			app.forbiddenResponse(w,r)
+		if !allowed {
+			app.forbiddenResponse(w, r)
 			return
 		}
 

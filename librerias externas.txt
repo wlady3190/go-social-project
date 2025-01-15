@@ -47,3 +47,6 @@ go get -u go.uber.org/zap
 CORS 
 go get github.com/go-chi/cors
 
+de vez en cuando hacer tidy en go.mod
+
+Para ejecutar el redis, se ejecuta: docker exec -it redis redis-cli KEYS "*"

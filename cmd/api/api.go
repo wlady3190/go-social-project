@@ -15,11 +15,15 @@ import (
 	// "github.com/wlady3190/go-social/internal/mailer"
 	"github.com/wlady3190/go-social/internal/auth"
 	"github.com/wlady3190/go-social/internal/store"
+	"github.com/wlady3190/go-social/internal/store/cache"
 )
 
 type application struct {
 	config config
 	store  store.Storage //! se pasa a main
+
+	//!Redis en cache.storage luego de implementarlo, se importa viene de la interface
+	cacheStorage cache.Storage
 	//* Logging estructurado con zap
 	logger *zap.SugaredLogger //! Para el main
 
@@ -28,6 +32,7 @@ type application struct {
 
 	//* Auhenticator
 	authenticator auth.Authenticator
+
 }
 
 type config struct {
@@ -40,6 +45,14 @@ type config struct {
 	//  mail        mailConfig
 	frontendURL string
 	auth        authConfig
+	redisCfg    redisConfig
+}
+
+type redisConfig struct {
+	add     string
+	pw      string
+	db      int
+	enabled bool
 }
 
 //! Basic config
@@ -142,8 +155,6 @@ func (app *application) mount() http.Handler {
 				// r.Patch("/", app.updatePostHandler)
 				r.Patch("/", app.checkPostOwnership("moderator", app.updatePostHandler))
 				r.Delete("/", app.checkPostOwnership("admin", app.deletePostHandler))
-
-
 
 				r.Route("/comments", func(r chi.Router) {
 					r.Post("/", app.createCommentHandler)
