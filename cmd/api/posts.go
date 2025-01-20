@@ -222,22 +222,38 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 		post.Title = *payload.Title
 	}
 
-	if err := app.store.Posts.Update(ctx, post); err != nil {
-		switch {
-		case errors.Is(err, store.ErrNotFound):
-			app.notFoundResponse(w, r, err)
-		default:
-			//409 por conflicto
-			app.conflictResponse(w, r, err)
-		}
+	// if err := app.store.Posts.Update(ctx, post); err != nil {
+	if err := app.updatePost(ctx, post); err != nil{
+		app.internalServerError(w,r,err)
 		return
 	}
+
+		// switch {
+		// case errors.Is(err, store.ErrNotFound):
+		// 	app.notFoundResponse(w, r, err)
+		// default:
+		// 	//409 por conflicto
+		// 	app.conflictResponse(w, r, err)
+		// }
+		// return
+	// }
 
 	if err := app.jsonResponse(w, http.StatusOK, post); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
 }
+
+//! Al actualizar, elimina el dato anterior de CACHE para que no acceda a info obsoleta
+func (app *application) updatePost(ctx context.Context, post *store.Post) error {
+	if err := app.store.Posts.Update(ctx, post); err != nil {
+		return err
+	}
+	//Eliminando dato antiguo del cache 
+	app.cacheStorage.Users.Delete(ctx, post.ID)
+	return nil
+}
+
 
 // ! Este middleware se consume en mount, en api
 func (app *application) postsContextMiddleware(next http.Handler) http.Handler {

@@ -50,3 +50,9 @@ func (s *UsersStore) Set(ctx context.Context, user *store.User) error {
 }
 
 //! Esto se aplica en el miidleware, en la obtención del Users.GetById
+
+func (s *UsersStore) Delete(ctx context.Context, userID int64) {
+	//! Eliminar info del cache
+	cacheKey := fmt.Sprintf("user-%d", userID)
+	s.rdb.Del(ctx, cacheKey)
+}
