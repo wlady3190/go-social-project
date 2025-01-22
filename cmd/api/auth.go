@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	// "log"
 	"time"
 
 	// "fmt"
@@ -106,6 +107,10 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	// 	Username: user.Username,
 	// 	ActivationURL: activationURL,
 	// }
+
+		// //* Graceful server shutdown 
+		// log.Println("Sleeping for test")
+		// time.Sleep(time.Second*5)
 	//! Enviadno correos
 	// status, err := app.mailer.Send(mailer.UserWelcomeTemplate, user.Username, user.Email, vars, !isProdEnv)
 	// if err != nil {
