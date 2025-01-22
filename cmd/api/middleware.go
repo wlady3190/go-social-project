@@ -29,7 +29,7 @@ func (app *application) AuthTokenMiddleware(next http.Handler) http.Handler {
 		jwtToken, err := app.authenticator.ValidateToken(token)
 
 		if err != nil {
-			app.unathorizedErrorResponse(w, r, fmt.Errorf("autorization header is missing - jwtToken"))
+			app.unathorizedErrorResponse(w, r, err)
 			return
 		}
 		claims, _ := jwtToken.Claims.(jwt.MapClaims)
