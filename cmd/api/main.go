@@ -9,6 +9,7 @@ import (
 	"github.com/wlady3190/go-social/internal/auth"
 	"github.com/wlady3190/go-social/internal/db"
 	"github.com/wlady3190/go-social/internal/env"
+	"github.com/wlady3190/go-social/internal/ratelimiter"
 	"github.com/wlady3190/go-social/internal/store/cache"
 
 	// "github.com/wlady3190/go-social/internal/mailer"
@@ -89,6 +90,11 @@ func main() {
 				iss:    "wladysocial",
 			},
 		},
+		rateLimiter: ratelimiter.Config{
+			RequestPerTimeFrame: env.GetInt("RATELIMITER_REQUEST_COUNT", 20),
+			TimeFrame:           time.Second * 5,
+			Enabled:             env.GetBool("RATE_LIMITER_ENABLED", true),
+		},
 	}
 
 	//* Logger
@@ -112,8 +118,15 @@ func main() {
 	if cfg.redisCfg.enabled {
 		rdb = cache.NewRedisClient(cfg.redisCfg.add, cfg.redisCfg.pw, cfg.redisCfg.db)
 		logger.Info("redis cache connection established")
+		defer rdb.Close()
 
 	}
+//* AQuí se puede cambiar el metodo de rate limiter en lugar de NewFixed, como el Token, etc.
+	rateLimiter := ratelimiter.NewFixedWindowLimiter(
+		cfg.rateLimiter.RequestPerTimeFrame,
+		cfg.rateLimiter.TimeFrame,
+	)
+
 
 	store := store.NewPostgresStorage(db) //! Y se pasa a la API
 	cacheStorage := cache.NewRedisStorage(rdb)
@@ -138,6 +151,8 @@ func main() {
 		//mailer: mailer, //* De aqui a auth -> RegisterUserHandler
 		// mailer: mailTrap,
 		authenticator: jwtAuthenticator,
+		//* rate Limiter. se hace al ultimo y se aplica como middleware en API
+		rateLimiter: rateLimiter,
 	}
 
 	mux := app.mount()

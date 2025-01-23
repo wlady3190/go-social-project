@@ -9,9 +9,17 @@ import (
 
 //go test
 func  TestGetUser(t *testing.T)  {
-	app := newTestApplication(t)
+
+	withRedis := config{
+		redisCfg: redisConfig{
+			enabled: true,
+		},
+	}
+
+	app := newTestApplication(t, withRedis)
 
 	mux := app.mount()
+	
 	//! testToken := "abc123" Primero hacer con esto para ver el token marformado
 	testToken, err := app.authenticator.GenerateToken(nil)
 	if err != nil {

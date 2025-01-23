@@ -52,3 +52,9 @@ de vez en cuando hacer tidy en go.mod
 Para ejecutar el redis, se ejecuta: docker exec -it redis redis-cli KEYS "*"
 
 Para ver conexiones activas lsof -i :puerto (* opcional el puerto)
+
+pruebas de solicitudes:
+npx autocannon -r 22 -d 1 -c 1 --renderStatusCodes http://localhost:8080/v1/health
+22 request q duran 1 segundo con una concurrencia
+
+
