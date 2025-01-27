@@ -21,6 +21,7 @@ import (
 
 	// "github.com/wlady3190/go-social/internal/mailer"
 	"github.com/wlady3190/go-social/internal/auth"
+	"github.com/wlady3190/go-social/internal/env"
 	"github.com/wlady3190/go-social/internal/ratelimiter"
 	"github.com/wlady3190/go-social/internal/store"
 	"github.com/wlady3190/go-social/internal/store/cache"
@@ -139,9 +140,28 @@ func (app *application) mount() http.Handler {
 	r.Use(middleware.RealIP) //! Ver documentacion sobre el uso con nginx
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+
+//! copia de chi cors
+	r.Use(cors.Handler(cors.Options{
+
+		// AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedOrigins:   []string{env.GetString("CORS_ALLOWED_ORIGIN", "http://localhost:5173" )},
+
+		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	  }))
+
 	if app.config.rateLimiter.Enabled {
 		r.Use(app.RateLimiterMiddleware)
 	}
+
+
+
+
 
 	// Set a timeout value on the request context (ctx), that will signal
 	// through ctx.Done() that the request has timed out and further
