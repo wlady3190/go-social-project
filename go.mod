@@ -1,6 +1,6 @@
 module github.com/wlady3190/go-social
 
-go 1.23.3
+go 1.23.5
 
 require (
 	github.com/go-chi/cors v1.2.1
