@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"expvar"
 	"fmt"
 	"net/http"
 	"os"
@@ -171,9 +172,12 @@ func (app *application) mount() http.Handler {
 	// r.Get("/v1/health", app.healthCheckHandler)
 	r.Route("/v1", func(r chi.Router) {
 		//! Viene del middleware de BasicAUth creado y va al main
-		// r.With(app.BasicAuthMiddleware()).
 		//! Graceful server shutdown
+		
 		r.Get("/health", app.healthCheckHandler)
+		//* Metricas
+		r.With(app.BasicAuthMiddleware()).Get("/debug/vars", expvar.Handler().ServeHTTP)
+
 		
 		// r.Get("/health", app.healthCheckHandler)
 
