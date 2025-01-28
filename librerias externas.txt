@@ -113,3 +113,20 @@ tmp_dir = "bin"
 
 CORS
 go get github.com/go-chi/cors
+
+CI/CD 
+creación de FIne-grained token
+-> colocar expiración
+-> Only selcted repositories (Seleccionar el repo)
+-> Permisions
+  actions -> read and write
+  contents -> read and write
+  metadat -> read-Only
+  pull requests -> r&w
+  y generar la Clase
+
+-> settings -> Secrets and variables -> actions -> New repository secret -> escribur MY_RELEASE_PLEASE_TOKEN y pegar el token generado
+-> cuando se haga el commit, se debe ir a la ejecución de las actions y aceptar el Pull Request 
+
+
+
