@@ -3,6 +3,8 @@ package main
 import (
 	// "time"
 
+	"expvar"
+	"runtime"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -154,6 +156,17 @@ func main() {
 		//* rate Limiter. se hace al ultimo y se aplica como middleware en API
 		rateLimiter: rateLimiter,
 	}
+	//* Metricas
+	expvar.NewString("version").Set(version)
+	//* ver info de la bd
+	expvar.Publish("database", expvar.Func(func() any {
+		return db.Stats()
+	}))
+	// ver numro de rutinas de go
+	expvar.Publish("goroutines", expvar.Func(func() any {
+		return runtime.NumGoroutine()
+	}))
+	
 
 	mux := app.mount()
 
