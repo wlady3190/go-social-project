@@ -12,7 +12,7 @@ ejecutar direnv allow .
 
 instalar golang migrate para migraciones
 
-go get -u -d github.com/golang-migrate/migrate/cmd/migrate
+go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 Crear archivos de migraciones
 migrate create -seq -ext sql -dir ./cmd/migrate/migrations/ create_users
 Migrar las tablas
